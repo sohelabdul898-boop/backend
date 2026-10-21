@@ -1,10 +1,10 @@
 import asynHandler from "../utils/asynchandler.js"
-import apierror from "../utils/ApiError.js"
+import {apierror} from "../utils/ApiError.js"
 import {User} from "../models/user.model.js"
 import { uploadonCloudinary } from "../utils/Cloudnary.js"
 import { apiResponse } from "../utils/apiresponse.js"
 const register = asynHandler(async (req, res) => {
-    const { username, email, fullname, password } = req.body
+    const { username, email, fullname, password } = req.body || {}
     console.log("email:", email);
     // if (fullname === "") {
     //     throw apierror(400,"fullname required")
@@ -21,18 +21,18 @@ const register = asynHandler(async (req, res) => {
     
     // second method
 if(
-    [fullname,email,username,password].some((field)=>field?.trim()==="")
+    [fullname,email,username,password].some((field)=>!field||field.trim()==="")
 ){
 throw new apierror(400,"All field are required")
 }
- const existeduser = User.findOne({
+ const existeduser =await User.findOne({
 $or:[{username},{email}]
 })
 if(existeduser){
 throw new apierror(409,"user already existed")
 }
-const avtarlocalpath = req.files?.avtar[0]?.path
-const coverImglocalpath = req.files?.coverImg[0]?.path
+const avtarlocalpath = req.files?.avtar?.[0]?.path;
+const coverImglocalpath = req.files?.coverImg?.[0]?.path;
 
 if(!avtarlocalpath){
 throw new apierror(400,"Avtar is required")
