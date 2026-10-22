@@ -15,6 +15,7 @@ try {
     }) 
     console.log("flie is uploded in cloudnary",
         response.url);
+        fs.unlinkSync(localFilePath)
     return response;
 
 } catch (error) {
