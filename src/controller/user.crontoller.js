@@ -100,31 +100,52 @@ const loginUser = asynHandler(async (req, res) => {
     }
 
 
-  const {accessToken,refreshToken}=  await generateAccessAndRefreshToken(user._id)
-const logeduser = User.findById(user._id).select("-password -refreshToken")
-const option ={
-    httpOnly:true,
-    secure:true,
-}
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+    const logeduser = User.findById(user._id).select("-password -refreshToken")
+    const option = {
+        httpOnly: true,
+        secure: true,
+    }
 
-return res.status(200)
-.cookie("accessToken",accessToken,option)
-.cookie("refreshToken",refreshToken,option)
-.json(
-    new apiResponse(
-        200,{
-            user:logeduser,accessToken,refreshToken
-        },
-        "user logedin Successfuly"
-    )
-)
+    return res.status(200)
+        .cookie("accessToken", accessToken, option)
+        .cookie("refreshToken", refreshToken, option)
+        .json(
+            new apiResponse(
+                200, {
+                user: logeduser, accessToken, refreshToken
+            },
+                "user logedin Successfuly"
+            )
+        )
 })
-const logoutuser = asynHandler(async(req,res)=>{
-    
+const logoutuser = asynHandler(async (req, res) => {
+    User.findByIdAndUpdate(req.user._id,
+        {
+
+            $set: {
+                refreshToken: undefined
+            }
+
+        }, {
+        new: true
+    }
+    )
+
+    const option = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res
+        .status(200)
+        .clearCookie("accessToken", option)
+        .clearCookie("refreshToken", option)
+        .json(new apiResponse(200, {}, "user logged out"))
 })
 
 
 export {
     register,
-    loginUser
+    loginUser, logoutuser
 }
