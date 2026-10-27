@@ -146,49 +146,140 @@ const logoutuser = asynHandler(async (req, res) => {
 })
 
 const RefreshToken = asynHandler(async (req, res) => {
-        const incomingResfreshToken = req.cookies.refreshToken || req.body.refreshToken
-        // in ther wrong right
-        if (!incomingResfreshToken) {
-            throw new apierror(401, "unauthorized request")
+    const incomingResfreshToken = req.cookies.refreshToken || req.body.refreshToken
+    // in ther wrong right
+    if (!incomingResfreshToken) {
+        throw new apierror(401, "unauthorized request")
+    }
+
+
+    try {
+        const decodedToken = jwt.verify(
+            incomingResfreshToken,
+            process.env.REFRESH_TOKEN_SECRET,
+        )
+
+        const user = await User.findById(decodedToken?._id)
+
+        if (!user) {
+            throw new apierror(401, "invalid refresh token")
         }
 
+        if (incomingResfreshToken !== user?.refreshToken) {
+            throw new apierror(401, " refreshtoken is expired or used")
+        }
 
-try {
-    const decodedToken = jwt.verify(
-    incomingResfreshToken,
-    process.env.REFRESH_TOKEN_SECRET,
-    )
-    
-    const user = await User.findById(decodedToken?._id)
-    
-    if(!user){
-    throw new apierror(401,"invalid refresh token")
+        const option = {
+            httpOnly: true,
+            secure: true,
+        }
+        const { accessToken, NewrefreshToken } = await generateAccessAndRefreshToken(user._id)
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, option)
+            .cookie("refreshToken", NewrefreshToken, option)
+            .json(new apiResponse(
+                200,
+                { accessToken, refreshToken: NewrefreshToken },
+                "Access token refreshed"
+            ))
+
+    } catch (error) {
+        throw new apierror(401, "Invalid  Refresh Token")
     }
-    
-    if(incomingResfreshToken !== user?.refreshToken){
-        throw new apierror(401 ," refreshtoken is expired or used")
+})
+const changecurrentPassword = asynHandler(async (req, res) => {
+    const { oldPassword, newPassord } = req.body
+    const user = await User.findAndCount(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+    if (!isPasswordCorrect) {
+        throw new apierror(401, "the old password is not correct")
     }
-    
-    const option ={
-        httpOnly:true,
-        secure :true,
+    user.password = newPassord
+    await user.save({ validateBeforeSave: false })
+    return res.status(200)
+        .json(new apiResponse(200, {}, "Password Changed Successfully"))
+})
+const getCurrentUser = asynHandler(async (req, res) => {
+    return res.status(200)
+        .json(200, req.user, "Current User fetched Successfully")
+})
+
+const updateAccount = asynHandler(async (req, res) => {
+    const { fullname, email } = req.body
+    if (!fullname || !email) {
+        throw new apierror(401, "fullname and email are required")
     }
-    const {accessToken,NewrefreshToken} = await generateAccessAndRefreshToken(user._id)
-    return res
+
+    const user = await User.findByIdAndUpdate(req.user?._id,
+        {
+            $set: {
+                fullname: fullname,
+                email: email
+            }
+        }, {
+        new: true
+    }
+    ).select("-password")
+    return
+    res
     .status(200)
-    .cookie("accessToken",accessToken,option)
-    .cookie("refreshToken", NewrefreshToken,option)
-    .json(new apiResponse(
-        200,
-        {accessToken,refreshToken:NewrefreshToken},
-        "Access token refreshed"
-    ))
-    
-} catch (error) {
-    throw new apierror(401,"Invalid  Refresh Token")
-}
-    })
+    .json(new apiResponse(200, user, "Your has updated"))
+})
+
+const updteUserAvtar = asynHandler(async (req, res) => {
+    const avtarLocalPath = req.file?.path
+    if (!avtarLocalPath) {
+        throw new apierror(401, "avtar was required")
+    }
+    const avtar = await uploadonCloudinary(avtarLocalPath)
+    if (!avtar.url) {
+        throw new apierror(401, "error while uploading avtar")
+    }
+    const user = await User.findByIdAndUpdate(req.user?._id,
+        {
+            $set: {
+                avtar: avtar.url
+            }
+        }, {
+        new: true
+    }
+    ).select("-password")
+    return res.status(200)
+    .json(new apiResponse(200, user, "Your Avtar has been Updated"))
+})
+
+
+const UpdateCoverImage = asynHandler(async (req, res) => {
+    const CoverimgLocalPath = req.file?.path
+    if (!CoverimgLocalPath)
+        throw new apierror(401, "Cover Image has required")
+
+    const coverImg = await uploadonCloudinary(CoverimgLocalPath)
+
+    if (!coverImg.url) {
+        throw apierror(401, "coverimg was not uploaded")
+    }
+    const user = await User.findByIdAndUpdate(req.user?._id,
+        {
+            coverImg: coverImg.url
+        }
+        , {
+            new: true
+        }
+    ).select("-password")
+    return res.status(200)
+    .json(200, user, "Your Cover Img has been Updated")
+})
 export {
     register,
-    loginUser, logoutuser,RefreshToken
+    loginUser,
+    logoutuser,
+    RefreshToken,
+    changecurrentPassword,
+    getCurrentUser,
+    updteUserAvtar,
+    UpdateCoverImage,
+    updateAccount
+
 }
