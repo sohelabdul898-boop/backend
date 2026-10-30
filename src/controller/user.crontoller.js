@@ -223,8 +223,8 @@ const updateAccount = asynHandler(async (req, res) => {
     ).select("-password")
     return
     res
-    .status(200)
-    .json(new apiResponse(200, user, "Your has updated"))
+        .status(200)
+        .json(new apiResponse(200, user, "Your has updated"))
 })
 
 const updteUserAvtar = asynHandler(async (req, res) => {
@@ -246,7 +246,7 @@ const updteUserAvtar = asynHandler(async (req, res) => {
     }
     ).select("-password")
     return res.status(200)
-    .json(new apiResponse(200, user, "Your Avtar has been Updated"))
+        .json(new apiResponse(200, user, "Your Avtar has been Updated"))
 })
 
 
@@ -269,7 +269,75 @@ const UpdateCoverImage = asynHandler(async (req, res) => {
         }
     ).select("-password")
     return res.status(200)
-    .json(200, user, "Your Cover Img has been Updated")
+        .json(200, user, "Your Cover Img has been Updated")
+})
+
+const getUserChannelProfile = asynHandler(async (req, res) => {
+    const { username } = req.params
+    if (!username?.trim()) {
+        throw new apierror(401, "there is no user namne")
+    }
+
+    const channel = await User.aggregate(
+        [
+            {
+                $match: {
+                    username: username?.toLowerCase()
+                }
+            }, {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscibers"
+                }
+            }, {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "subsciber",
+                    as: "subscibersTo"
+                }
+
+            },{
+                $addFields:{
+                    SubsciberCounts:{
+                        $size:"$subscibers",
+                    },
+                    channelsToCount:{
+                        $size:"subscibersTo",
+                    },
+                    isSubscribed:{
+                        $cond:{
+                            if:{$in:[req.user?._id,"$subscibers.subsciber"]},
+                            then:true,
+                            else:false
+                        }
+                    }
+                }
+            },{
+                $project:{
+                    fullname:1,
+                    email:1,
+                    username:1,
+                    avtar:1,
+                    coverImg:1,
+                    SubsciberCounts:1,
+                     channelsToCount:1,
+                     isSubscribed:1
+                }
+            }
+
+        ]
+    )
+    if(!channel?.length){
+throw new apierror(404, "there is no channel is exist")
+    }
+    return res
+    .status(200)
+    .json(
+        new apiResponse(200,channel[0],"User channel Fetched successfully")
+    )
 })
 export {
     register,
@@ -280,6 +348,6 @@ export {
     getCurrentUser,
     updteUserAvtar,
     UpdateCoverImage,
-    updateAccount
+    updateAccount, getUserChannelProfile
 
 }
