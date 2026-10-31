@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadonCloudinary } from "../utils/Cloudnary.js"
 import { apiResponse } from "../utils/apiresponse.js"
 import jwt from "jsonwebtoken"
+import mongoose, { Schema } from "mongoose"
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -299,45 +300,98 @@ const getUserChannelProfile = asynHandler(async (req, res) => {
                     as: "subscibersTo"
                 }
 
-            },{
-                $addFields:{
-                    SubsciberCounts:{
-                        $size:"$subscibers",
+            }, {
+                $addFields: {
+                    SubsciberCounts: {
+                        $size: "$subscibers",
                     },
-                    channelsToCount:{
-                        $size:"subscibersTo",
+                    channelsToCount: {
+                        $size: "subscibersTo",
                     },
-                    isSubscribed:{
-                        $cond:{
-                            if:{$in:[req.user?._id,"$subscibers.subsciber"]},
-                            then:true,
-                            else:false
+                    isSubscribed: {
+                        $cond: {
+                            if: { $in: [req.user?._id, "$subscibers.subsciber"] },
+                            then: true,
+                            else: false
                         }
                     }
                 }
-            },{
-                $project:{
-                    fullname:1,
-                    email:1,
-                    username:1,
-                    avtar:1,
-                    coverImg:1,
-                    SubsciberCounts:1,
-                     channelsToCount:1,
-                     isSubscribed:1
+            }, {
+                $project: {
+                    fullname: 1,
+                    email: 1,
+                    username: 1,
+                    avtar: 1,
+                    coverImg: 1,
+                    SubsciberCounts: 1,
+                    channelsToCount: 1,
+                    isSubscribed: 1
                 }
             }
 
         ]
     )
-    if(!channel?.length){
-throw new apierror(404, "there is no channel is exist")
+    if (!channel?.length) {
+        throw new apierror(404, "there is no channel is exist")
     }
     return res
+        .status(200)
+        .json(
+            new apiResponse(200, channel[0], "User channel Fetched successfully")
+        )
+})
+const getuserwatchHistory = asynHandler(async (req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id)
+            }
+        }, {
+            $lookup: {
+                from: "videos",
+                localField: " WatchHistory",
+                foreignField: _id,
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullname: 1,
+                                        avtar: 1,
+                                        username: 1,
+                                    }
+                                }
+                            ]
+                        }
+
+                    }
+                ]
+            }
+        },{
+            $addFields:{
+                owner:{
+                    $first:"$owner"
+                }
+            }
+        }
+        
+    ])
+
+    res
     .status(200)
     .json(
-        new apiResponse(200,channel[0],"User channel Fetched successfully")
+        new apiResponse(
+            200,user[0].watchHistory,
+            "watch History fetched Successfully"
+        )
     )
+
 })
 export {
     register,
@@ -345,9 +399,11 @@ export {
     logoutuser,
     RefreshToken,
     changecurrentPassword,
+    updateAccount,
     getCurrentUser,
     updteUserAvtar,
     UpdateCoverImage,
-    updateAccount, getUserChannelProfile
-
+    updateAccount,
+    getUserChannelProfile
+    , getuserwatchHistory
 }
