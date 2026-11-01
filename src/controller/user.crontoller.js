@@ -404,6 +404,6 @@ export {
     updteUserAvtar,
     UpdateCoverImage,
     updateAccount,
-    getUserChannelProfile
-    , getuserwatchHistory
+    getUserChannelProfile,
+    getuserwatchHistory
 }

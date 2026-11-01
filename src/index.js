@@ -26,11 +26,6 @@ connectdb()
 // const app = express()
 
 
-
-
-
-
-
 // using ife we can connect the database it is a profesional approach
 /*
 (async ()=>{
