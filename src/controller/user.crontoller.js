@@ -5,6 +5,7 @@ import { uploadonCloudinary } from "../utils/Cloudnary.js"
 import { apiResponse } from "../utils/apiresponse.js"
 import jwt from "jsonwebtoken"
 import mongoose, { Schema } from "mongoose"
+import { json } from "express"
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -190,20 +191,21 @@ const RefreshToken = asynHandler(async (req, res) => {
     }
 })
 const changecurrentPassword = asynHandler(async (req, res) => {
-    const { oldPassword, newPassord } = req.body
-    const user = await User.findAndCount(req.user?._id)
+    const { oldPassword, newPassword } = req.body
+    const user = await User.findById(req.user?._id)
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
     if (!isPasswordCorrect) {
         throw new apierror(401, "the old password is not correct")
     }
-    user.password = newPassord
+    user.password = newPassword
     await user.save({ validateBeforeSave: false })
     return res.status(200)
         .json(new apiResponse(200, {}, "Password Changed Successfully"))
 })
 const getCurrentUser = asynHandler(async (req, res) => {
-    return res.status(200)
-        .json(200, req.user, "Current User fetched Successfully")
+          return 
+          res.status(200)
+        .json(new apiResponse(200, req.user, "Current user fetched successfully"))
 })
 
 const updateAccount = asynHandler(async (req, res) => {
@@ -219,13 +221,11 @@ const updateAccount = asynHandler(async (req, res) => {
                 email: email
             }
         }, {
-        new: true
+        returnDocument: "after"
     }
     ).select("-password")
-    return
-    res
-        .status(200)
-        .json(new apiResponse(200, user, "Your has updated"))
+    return res
+    .status(200).json(new apiResponse(200,user,"Account succefully Updated"))
 })
 
 const updteUserAvtar = asynHandler(async (req, res) => {
@@ -243,7 +243,7 @@ const updteUserAvtar = asynHandler(async (req, res) => {
                 avtar: avtar.url
             }
         }, {
-        new: true
+       returnDocument:"after"
     }
     ).select("-password")
     return res.status(200)
@@ -263,14 +263,17 @@ const UpdateCoverImage = asynHandler(async (req, res) => {
     }
     const user = await User.findByIdAndUpdate(req.user?._id,
         {
+           $set:{
             coverImg: coverImg.url
+           }
         }
         , {
-            new: true
+            returnDocument:"after"
         }
     ).select("-password")
+
     return res.status(200)
-        .json(200, user, "Your Cover Img has been Updated")
+        .json(new apiResponse (200,user,"coverimg has been updated"))
 })
 
 const getUserChannelProfile = asynHandler(async (req, res) => {
@@ -306,7 +309,7 @@ const getUserChannelProfile = asynHandler(async (req, res) => {
                         $size: "$subscibers",
                     },
                     channelsToCount: {
-                        $size: "subscibersTo",
+                        $size: "$subscibersTo",
                     },
                     isSubscribed: {
                         $cond: {
@@ -349,8 +352,8 @@ const getuserwatchHistory = asynHandler(async (req, res) => {
         }, {
             $lookup: {
                 from: "videos",
-                localField: " WatchHistory",
-                foreignField: _id,
+                localField: "WatchHistory",
+                foreignField:" _id",
                 as: "watchHistory",
                 pipeline: [
                     {
@@ -399,11 +402,10 @@ export {
     logoutuser,
     RefreshToken,
     changecurrentPassword,
-    updateAccount,
     getCurrentUser,
+    updateAccount,
     updteUserAvtar,
     UpdateCoverImage,
-    updateAccount,
     getUserChannelProfile,
     getuserwatchHistory
 }
