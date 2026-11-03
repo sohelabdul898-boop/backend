@@ -15,6 +15,9 @@ app.use(cookieParser())
 
 // router 
 import router from "./routes/user.routes.js"
+import CommentRouter from "./routes/comment.routes.js"
+
 // routes decleration
 app.use("/api/v1/users",router)
+app.use("/api/v1/comments",CommentRouter)
 export {app}
