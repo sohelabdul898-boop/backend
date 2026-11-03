@@ -13,7 +13,7 @@ import {
     updateAccount,
     UpdateCoverImage,
     updteUserAvtar
-} from "../controller/user.crontoller.js"
+} from "../controller/user.controller.js"
 import { verifyJWT } from "../middleweras/auth.middleweare.js"
 
 const router = Router()
