@@ -1,55 +1,123 @@
 import mongoose, { isValidObjectId } from "mongoose";
 import { Comment } from "../models/comment.model.js";
-import { apiResponse, apiresponse } from "../utils/apiresponse.js"
-import { asynchandler } from "../utils/asynchandler.js"
+import { apiResponse } from "../utils/apiresponse.js"
+import asynHandler from "../utils/asynchandler.js";
 import { apierror } from "../utils/ApiError.js"
 
-const getVideoComment = asynchandler(async (req, res) => {
+const getVideoComment = asynHandler(async (req, res) => {
     const { videoId } = req.params
     const { page = 1, limit = 10 } = req.query
     if (!isValidObjectId(videoId)) {
         throw new apierror(400, "video id is not valid")
     }
+    // const commentAggregate = Comment.aggregate([
+    //     {
+    //         $match: {
+    //             video: mongoose.Types.ObjectId(videoId),
+    //             _id: new ObjectId(videoId)
+    //         }, 
+    // $lookup: {
+    //             from: "users",
+    //             localField: "owner",
+    //             foreignField: "_id",
+    //             as: "owner",
+    //             pipeline: [
+    //                 {
+    //                     $project: {
+    //                         username: 1,
+    //                         fulname: 1,
+    //                         avtar: 1
+    //                     }
+    //                 }
+    //             ]
+            
+    //     },
+    //         $lookup: {
+    //             from: "likes",
+    //             localField: "_id",
+    //             foreignField: "comment",
+    //             as: "likes"
+    //         }
+    //     }, {
+    //         $addFields: {
+    //             owner: {
+    //                 $first: "$owner"
+    //             }, likesCount: {
+    //                 $size: "$likes"
+    //             },
+    //             isLikes: {
+    //                 $cond: {
+    //                     if: { $in: [req.user?._id, "$likes.likedBy"] }
+    //                     , then: true,
+    //                     else: false
+    //                 }
+    //             }
+    //         }
+
+    //     }, {
+    //         $project: {
+    //             content: 1,
+    //             createdAt: 1,
+    //             likesCount: 1,
+    //             owner: 1,
+    //             isLikes: 1
+    //         }
+    //     }, {
+    //         $sort: {
+    //             createdAt: -1
+    //         }
+    //     }
+    // ]
+    // )
     const commentAggregate = Comment.aggregate([
         {
             $match: {
-                video: mongoose.Types.ObjectId(videoId)
-            }, $lookup: {
+                video: new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        {
+            $lookup: {
                 from: "users",
                 localField: "owner",
                 foreignField: "_id",
                 as: "owner",
                 pipeline: [
                     {
-                        username: 1,
-                        fulname: 1,
-                        avtar: 1
+                        $project: {
+                            username: 1,
+                            fulname: 1,
+                            avtar: 1
+                        }
                     }
                 ]
-            },
+            }
+        },
+        {
             $lookup: {
                 from: "likes",
                 localField: "_id",
                 foreignField: "comment",
                 as: "likes"
             }
-        }, {
+        },
+        {
             $addFields: {
                 owner: {
                     $first: "$owner"
-                }, likesCount: {
+                },
+                likesCount: {
                     $size: "$likes"
                 },
                 isLikes: {
                     $cond: {
-                        if: { $in: [req.user?._id, "$likes.likedBy"] }
-                        , then: true,
+                        if: { $in: [req.user?._id, "$likes.likedBy"] },
+                        then: true,
                         else: false
                     }
                 }
             }
-
-        }, {
+        },
+        {
             $project: {
                 content: 1,
                 createdAt: 1,
@@ -57,13 +125,13 @@ const getVideoComment = asynchandler(async (req, res) => {
                 owner: 1,
                 isLikes: 1
             }
-        }, {
+        },
+        {
             $sort: {
                 createdAt: -1
             }
         }
-    ]
-    )
+    ]);
     const option = {
         page: parseInt(page, 10),
         limit: parseInt(limit, 10)
@@ -71,13 +139,13 @@ const getVideoComment = asynchandler(async (req, res) => {
     const comment = await Comment.aggregatePaginate(commentAggregate, option)
 
     return res.status(200).
-        json(new apiresponse(200, "comment fetched successfully"))
+        json(new apiResponse(200, comment, "comment fetched successfully"))
 
 }
 
 )
 
-const AddComment = asynchandler(async (req, res) => {
+const AddComment = asynHandler(async (req, res) => {
     const { videoId } = req.params
     const { content } = req.body
 
@@ -85,7 +153,7 @@ const AddComment = asynchandler(async (req, res) => {
         throw new apierror(400, "content is reqiured")
     }
     if (!isValidObjectId(videoId)) {
-        throw new apiresponse(400, "video id is not valid")
+        throw new apierror(400, "video id is not valid")
     }
     const comment = Comment.create({
         content: content.trim(),
@@ -97,11 +165,11 @@ const AddComment = asynchandler(async (req, res) => {
     }
     return res
         .status(200)
-        .json(new apiresponse(200, "your comment add successfully"))
+        .json(new apiResponse(200, "your comment add successfully"))
 })
 
 
-const updatecomment = asynchandler(async (req, res) => {
+const updatecomment = asynHandler(async (req, res) => {
     const { commentId } = req.params
     const { content } = req.body
     if (!isValidObjectId(commentId)) {
@@ -130,7 +198,7 @@ const updatecomment = asynchandler(async (req, res) => {
         .json(new apiResponse(200, "your comment has updated"))
 })
 
-const DeleteComment = asynchandler(async (req, res) => {
+const DeleteComment = asynHandler(async (req, res) => {
     const { commentId } = req.params
 
     if (!isValidObjectId(commentId)) {
@@ -145,7 +213,7 @@ const DeleteComment = asynchandler(async (req, res) => {
     }
     const comment = await Comment.findByIdAndDelete(commentId)
     return res.status(200)
-        .json(new apiresponse(200, {}, "your comment was successfully deleted"))
+        .json(new apiResponse(200, {}, "your comment was successfully deleted"))
 })
 export {
     getVideoComment,
