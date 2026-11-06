@@ -17,9 +17,11 @@ app.use(cookieParser())
 import router from "./routes/user.routes.js"
 import CommentRouter from "./routes/comment.routes.js"
 import healthcheckRouter from "./routes/healthcheck.routes.js"
+import likeRouter from "./routes/like.routes.js"
 
 // routes decleration
 app.use("/api/v1/users",router)
 app.use("/api/v1/comments",CommentRouter)
 app.use("/api/v1/healthCheck",healthcheckRouter)
+app.use("/api/v1/like",likeRouter)
 export {app}
