@@ -25,5 +25,5 @@ app.use("/api/v1/users",router)
 app.use("/api/v1/comments",CommentRouter)
 app.use("/api/v1/healthCheck",healthcheckRouter)
 app.use("/api/v1/like",likeRouter)
-app.use("//api/v1/",VideoRouter)
+app.use("/api/v1/videos",VideoRouter)
 export {app}

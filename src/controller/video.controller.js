@@ -1,9 +1,10 @@
-import { asynHandler } from "../utils/asynchandler.js";
+import  asynHandler  from "../utils/asynchandler.js";
 import { apierror } from "../utils/ApiError.js";
 import { apiResponse } from "../utils/apiresponse.js";
 import { Video } from "../models/video.model.js";
 import { User } from "../models/user.model.js"
-import { uploadOnCloudinary } from "../utils/Cloudnary.js"
+// import {uploadOnCloudinary} from "../utils/Cloudnary.js"
+import { uploadonCloudinary } from "../utils/Cloudnary.js"
 import mongoose, { isValidObjectId } from "mongoose";
 const getallvideos = asynHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, useId } = req.query
@@ -56,8 +57,8 @@ const publishedVideo = asynHandler(async (req, res) => {
     if (!title || !description) {
         throw new apierror(400, "title and description is required")
     }
-    const uploadvideo = await uploadOnCloudinary(videofilelocalpath)
-    const uploadthumbnail = await uploadOnCloudinary(thumbnalifilelocalpath)
+    const uploadvideo = await uploadonCloudinary(videofilelocalpath)
+    const uploadthumbnail = await uploadonCloudinary(thumbnalifilelocalpath)
     if (!uploadvideo.url) {
         throw new apierror(401, "video url is not found")
     }
@@ -108,7 +109,7 @@ const updateVideo = asynHandler(async (req, res) => {
     if (description) updateData.description = description
 
     if (thumbnaillocalpath) {
-        const thumbnail = await uploadOnCloudinary(thumbnaillocalpath)
+        const thumbnail = await uploadonCloudinary(thumbnaillocalpath)
         if (!thumbnail?.url) {
             throw new apierror(400, "some error occur while uploading")
         }
