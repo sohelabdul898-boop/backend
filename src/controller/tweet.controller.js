@@ -1,10 +1,12 @@
 import { isValidObjectId } from "mongoose";
 import mongoose from "mongoose";
 import { apierror } from "../utils/ApiError.js"
-import { apiresponse } from "../utils/apiresponse.js"
+// import { apiresponse } from "../utils/apiresponse.js"
+import { apiResponse } from "../utils/apiresponse.js"
 import asyncHandler from "../utils/asynchandler.js"
 import { Tweet } from "../models/tweets.model.js";
 import { User } from "../models/user.model.js"
+import { json } from "express";
 const createTweet = asyncHandler(async (req, res) => {
     const { content } = req.body
     if (!content || content.trim() == "") {
@@ -16,7 +18,7 @@ const createTweet = asyncHandler(async (req, res) => {
     })
     return res
         .status(200)
-        .json(new apiresponse(200, tweet, "Your tweet is successfully created"))
+        .json(new apiResponse(200, tweet, "Your tweet is successfully created"))
 })
 const getUsertweet = asyncHandler(async (req, res) => {
     const { userId } = req.params
@@ -35,7 +37,7 @@ const getUsertweet = asyncHandler(async (req, res) => {
     });
     return res
         .status(200)
-        .json(200, tweets, "user tweet fetched successfully")
+        .json(new apiResponse(200,tweets,"user tweet fetchd successfully"))
 
 })
 const updatetweet = asyncHandler(async (req, res) => {
@@ -63,7 +65,7 @@ const updatetweet = asyncHandler(async (req, res) => {
     })
     return res
         .status(200)
-        .json(new apiresponse(200, tweet, "your tweet update successfully"))
+        .json(new apiResponse(200, tweet, "your tweet update successfully"))
 })
 const deleteTweet = asyncHandler(async (req, res) => {
     const { tweetId } = req.params
@@ -78,7 +80,9 @@ const deleteTweet = asyncHandler(async (req, res) => {
         throw new apierror(400, "you can only delete your tweet")
     }
     const tweet = await Tweet.findByIdAndDelete(tweetId)
-    return res.status(200).json(new apiresponse(200, tweet, "your tweet deleted succssfully"))
+    return res
+    .status(200)
+    .json(new apiResponse(200, tweet, "your tweet deleted succssfully"))
 })
 
 export {
