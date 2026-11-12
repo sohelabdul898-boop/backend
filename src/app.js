@@ -20,6 +20,7 @@ import healthcheckRouter from "./routes/healthcheck.routes.js"
 import likeRouter from "./routes/like.routes.js"
 import VideoRouter from "./routes/video.routes.js"
 import tweetRouter from "./routes/tweet.routes.js"
+import DashBoard from "./routes/dashboard.routes.js"
 // routes decleration
 app.use("/api/v1/users",router)
 app.use("/api/v1/comments",CommentRouter)
@@ -27,4 +28,5 @@ app.use("/api/v1/healthCheck",healthcheckRouter)
 app.use("/api/v1/like",likeRouter)
 app.use("/api/v1/videos",VideoRouter)
 app.use("/api/v1/tweet",tweetRouter)
+app.use("/api/v1/Dashboard",DashBoard)
 export {app}
