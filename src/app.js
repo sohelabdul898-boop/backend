@@ -21,6 +21,8 @@ import likeRouter from "./routes/like.routes.js"
 import VideoRouter from "./routes/video.routes.js"
 import tweetRouter from "./routes/tweet.routes.js"
 import DashBoard from "./routes/dashboard.routes.js"
+import PlayList from "./routes/playlist.routes.js"
+// import { playlist } from "./models/playlist.model.js"
 // routes decleration
 app.use("/api/v1/users",router)
 app.use("/api/v1/comments",CommentRouter)
@@ -29,4 +31,5 @@ app.use("/api/v1/like",likeRouter)
 app.use("/api/v1/videos",VideoRouter)
 app.use("/api/v1/tweet",tweetRouter)
 app.use("/api/v1/Dashboard",DashBoard)
+app.use("/api/v1/playlist",PlayList)
 export {app}
