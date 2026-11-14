@@ -5,6 +5,7 @@ import asynHandler from "../utils/asynchandler.js";
 import {playlist, playlist} from "../models/playlist.model.js"
 import { isValidObjectId } from "mongoose";
 import { User } from "../models/user.model.js";
+import {Video} from "../models/video.model.js"
 
  const cretatePlyalist = asynHandler(async(req,res)=>{
 const {name,description} = req.body
@@ -49,10 +50,52 @@ const {playlistId} = req.params
 })
 const addVideoPlaylist = asynHandler(async(req,res)=>{
 const {playlistId,videoId} = req.params
+if (!isValidObjectId(playlistId)) {
+   throw new apierror(400,"play list id is not valid")
+}
+if (!isValidObjectId(videoId)) {
+   throw new apierror(400,"video is not valid")
+}
+const userplaylist = await playlist.findById(playlistId)
+if(userplaylist.owner.toString() !== req.user._id.toString()){
+throw new apierror(400,"you can add video only your playlist")
+}
+const video = await Video.findById(videoId)
+if (!video) {
+   throw new apierror(400,"video was not exist")
+}
+const addVideoplaylist = await playlist.findByIdAndUpdate(playlistId,{
+   $addToSet:{
+      videos:videoId,
+   }
+},{
+   new :true
+})
+ return res
+ .status(200)
+ .json(new apiResponse(200,addVideoplaylist,"video was add on your playlist"))
 })
 const removeVideofromPlaylist = asynHandler(async(req,res)=>{
 const {playlistId,videoId} = req.params
-
+if(!isValidObjectId(playlistId)){
+   throw new apierror(400,"play list is not valid")
+}
+if (!isValidObjectId(videoId)) {
+   throw new apierror(400 ,"video id is not valid")
+}
+const userPlaylist  = await playlist.findById(playlistId)
+if (userPlaylist.owner.toString() !== req.user?._id.toString()) {
+   throw new apierror(400,"you can remove video from you playlist")
+}
+const Playlist = await playlist.findByIdAndUpdate(playlistId,{
+   $pull:{
+      videos:videoId
+   }
+},{
+   new:true
+})
+ return res.status(200)
+ .json(new apiResponse(200,Playlist,"your video is roemove from playlis"))
 })
 const deletplaylist = asynHandler(async(req,res)=>{
 const {playlistId} = req.params
