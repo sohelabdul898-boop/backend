@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getPlyalistById,getUserPlaylist,updatePlaylist,deletplaylist,removeVideofromPlaylist,cretatePlyalist,addVideoPlaylist } from "../controller/playlist.controller";
+import { getPlyalistById,getUserPlaylist,updatePlaylist,deletplaylist,removeVideofromPlaylist,cretatePlyalist,addVideoPlaylist } from "../controller/playlist.controller.js";
 import { verifyJWT } from "../middleweras/auth.middleweare.js";
 const router = Router()
 router.use(verifyJWT)
