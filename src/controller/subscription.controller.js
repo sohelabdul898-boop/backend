@@ -8,12 +8,12 @@ import { apiResponse } from "../utils/apiresponse.js"
 const togglesubscription = asncHandler(async(req,res)=>{
 
 })
-const getuserchannelsubscriptio = asncHandler(async(req,res)=>{
+const getuserchannelsubscription = asncHandler(async(req,res)=>{
 
 })
 const getsubscriberchannel = asynHandler(async(req,res)=>{
 
 })
 export{getsubscriberchannel,
-    getuserchannelsubscriptio,
+    getuserchannelsubscription,
     togglesubscription}
