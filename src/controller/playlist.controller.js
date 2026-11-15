@@ -2,7 +2,7 @@ import mongoose, { set }  from "mongoose";
 import  {apiResponse } from "../utils/apiresponse.js";
 import  {apierror} from "../utils/ApiError.js";
 import asynHandler from "../utils/asynchandler.js";
-import {playlist, playlist} from "../models/playlist.model.js"
+import { playlist} from "../models/playlist.model.js"
 import { isValidObjectId } from "mongoose";
 import { User } from "../models/user.model.js";
 import {Video} from "../models/video.model.js"
@@ -47,6 +47,14 @@ return res
 })
 const getPlyalistById = asynHandler(async(req,res)=>{
 const {playlistId} = req.params
+if (isValidObjectId(playlistId)) {
+   throw new apierror(400,"id is not valid")
+}
+const Playlist = await playlist.findById(playlistId).populate("videos","title thumbnail","duration views").populate("username avtar","owner")
+if (!Playlist) {
+   throw new apierror(400,"you playlist was not exist")
+}
+return res.status(200).json(new apiResponse(200,Playlist,"playlist fetched successfully"))
 })
 const addVideoPlaylist = asynHandler(async(req,res)=>{
 const {playlistId,videoId} = req.params
